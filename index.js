@@ -1,6 +1,7 @@
 var Hapi    = require('hapi');
 var path    = require('path');
 var cfenv   = require('cfenv');
+var fs = require('fs');
 
 var appEnv = cfenv.getAppEnv();
 
@@ -22,7 +23,7 @@ var cloudant = require('cloudant')({
 
 var covendb = cloudant.db.use('coven');
 
-var version = "bluemix";
+var version = "test";
 
 var providers = {};
 if(version === "bluemix"){
@@ -55,8 +56,6 @@ var maxwho = require("maxwho")({
     indexes : ["accounts.facebook", "accounts.google", "accounts.twitter", "accounts.linkedin", "email"]
   },
   hapi_server : server,
-  bell : require('bell'),
-  session : require('hapi-auth-cookie'),
   providers : providers,
   cookie : {
     name : "coven-cookie",
@@ -69,44 +68,11 @@ var maxwho = require("maxwho")({
   }
 });
 
-server.views({
-  engines: {
-    jsx: require('hapi-react-views')
-  },
-  relativeTo : __dirname,
-  path: './views'
+server.register(require('inert'), function (err) {
+    if(err) throw err
 });
 
-//static routes
-server.route({
-  method: 'GET',
-  path: '/css/{param*}',
-  handler: {
-    directory: {
-      path: './example/static/css'
-    }
-  }
-});
 
-server.route({
-  method: 'GET',
-  path: '/fonts/{param*}',
-  handler: {
-    directory: {
-      path: './example/static/fonts'
-    }
-  }
-});
-
-server.route({
-  method: 'GET',
-  path: '/js/{param*}',
-  handler: {
-    directory: {
-      path: './example/static/js'
-    }
-  }
-});
 
 //registration handling route
 server.route({
@@ -126,7 +92,6 @@ server.route({
       if (request.auth.isAuthenticated && request.auth.credentials.dummy === undefined) {
         return reply.redirect('/');
       }
-
       maxwho.reg(request.auth.session, {
         email : request.payload.email,
         password : request.payload.password,
@@ -174,10 +139,21 @@ server.route({
         data.lastname = profile.name.last;
       }
 
-      return reply.view('register',data)
-      .header('Cache-Control', 'private, max-age=0, no-cache, no-store, must-revalidate')
-      .header('Expires', '-1')
-      .header('Pragma', 'no-cache');
+      fs.readFile('./page/html/register.html', function (err, data) {
+        if (err) throw err;
+        return reply(data).type('text/html');
+      });
+    }
+  }
+});
+
+
+server.route({
+  method: 'GET',
+  path: '/js/{param*}',
+  handler: {
+    directory: {
+      path: './page/js'
     }
   }
 });
@@ -200,7 +176,6 @@ server.route({
       if(request.auth.isAuthenticated){
         return reply.redirect('/');
       }
-
       maxwho.login(request.auth.session, {
         email : request.payload.email,
         password : request.payload.password
@@ -228,13 +203,7 @@ server.route({
       if (request.auth.isAuthenticated && request.auth.credentials.dummy === undefined) {
         return reply.redirect('/');
       }
-
-      return reply.view('login',{
-        title : "Log in to MaxWhere!"
-      })
-      .header('Cache-Control', 'private, max-age=0, no-cache, no-store, must-revalidate')
-      .header('Expires', '-1')
-      .header('Pragma', 'no-cache');
+      return reply.file('./page/html/login.html')
     }
   }
 });
@@ -273,10 +242,10 @@ server.route({
         linkedin : profile.accounts.linkedin === undefined ? true : false
       };
 
-      return reply.view('main', data)
-      .header('Cache-Control', 'private, max-age=0, no-cache, no-store, must-revalidate')
-      .header('Expires', '-1')
-      .header('Pragma', 'no-cache');
+      fs.readFile('./page/html/index.html', function (err, data) {
+        if (err) throw err;
+        return reply(data).type('text/html');
+      });
     }
   }
 });
