@@ -1,4 +1,4 @@
-function log () {
+function login (){
   var email = $("#email").val();
   var pass = $("#password").val();
   $.post("/login-handler", {email: email , password: pass},function(data, status){
@@ -13,7 +13,5 @@ function log () {
 }
 
 $(function (){
-  $('#login').on('click',function (){
-    log()
-  })
+  $('#login').on('click',login)
 })

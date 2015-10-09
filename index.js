@@ -250,6 +250,46 @@ server.route({
   }
 });
 
+//slides
+server.route({
+  method: ['POST'],
+  path: '/showslides',
+  config: {
+    auth: {
+      mode: 'try',
+      strategy: 'session'
+    },
+    plugins: {
+      'hapi-auth-cookie': {
+        redirectTo: false
+      }
+    },
+    handler: function(request, reply){
+      if(!request.auth.isAuthenticated){
+        return reply("authentication error")
+      }
+    var test = {
+      "type":"slideshow"
+      , "_id": "987654321"
+      ,"title": "slidecime"
+      ,"owner": "useridja"
+      , "slides": [
+        {
+          "valami": "plusz"
+          , "url": "url/to/slide1"
+        }
+        ,{
+          "valami": "plusz"
+          , "url": "url/to/slide2"
+        }
+      ]
+    };
+
+    return reply(JSON.stringify(test));
+    }
+  }
+});
+
 server.start(function () {
   console.log('[SERVER] Starting at ', server.info.uri);
 });
